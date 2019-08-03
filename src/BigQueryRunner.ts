@@ -17,7 +17,7 @@ interface QueryResult {
   info: { [s: string]: any };
   table: TableResult;
   json: string;
-  detail: object;
+  detail: string;
 }
 
 interface QueryResultError {
@@ -152,7 +152,7 @@ export class BigQueryRunner {
       },
       table: this.makeTable(rows),
       json: JSON.stringify(rows, null, "  "),
-      detail: {}
+      detail: JSON.stringify(metadata.statistics, null, "  "),
     };
   }
 

@@ -34,6 +34,7 @@
       </article>
     </div>
     <div v-if="!!info">
+      <div>
       <div class="tabs">
         <ul>
           <li v-bind:class="{ 'is-active': activeTag === 'info' }"><a @click="activeTag = 'info'">Info</a></li>
@@ -41,7 +42,7 @@
           <li v-bind:class="{ 'is-active': activeTag === 'json' }"><a @click="activeTag = 'json'">JSON</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'detail' }"><a @click="activeTag = 'detail'">Detail</a></li>
         </ul>
-      </div>
+      </div></div>
       <div v-if="activeTag === 'info'">
         <div class="table-container">
           <table class="table is-bordered is-striped is-narrow is-hoverable">
@@ -76,7 +77,7 @@
         <pre><code>{{ json }}</code></pre>
       </div>
       <div v-if="activeTag === 'detail'">
-        {{ detail }}
+        <pre><code>{{ detail }}</code></pre>
       </div>
     </div>
   </div>
