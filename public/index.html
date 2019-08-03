@@ -16,10 +16,11 @@
 </head>
 
 <body>
-  <div id="app">
-    <div>
+  <section class="section" id="app">
+    <div class="container">
       <button class="button is-info" @click="runAsQuery">Run</button>
       <button class="button" @click="runAsQuery">Run Selected</button>
+      <span v-if="queryIsDone">（経過時間: {{elapsedTime}} 秒、処理されたバイト数: {{totalBytesProcessed}} MB）</span>
     </div>
     <div class="tabs">
       <ul>
@@ -65,7 +66,7 @@
     <div v-if="activeTag === 'detail'">
       {{ detail }}
     </div>
-  </div>
+  </section>
   <script src="__RESOURCE_DIR__/main.js"></script>
 </body>
 

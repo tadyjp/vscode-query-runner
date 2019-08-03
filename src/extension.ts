@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import {BigQueryRunner} from './bigquery';
+import { BigQueryRunner } from './BigQueryRunner';
 
 const configPrefix = "queryRunner";
 let config: vscode.WorkspaceConfiguration;
@@ -15,25 +15,25 @@ export function activate(context: vscode.ExtensionContext) {
 	readConfig();
 
 	context.subscriptions.push(
-    vscode.workspace.onDidChangeConfiguration(event => {
-      if (!event.affectsConfiguration(configPrefix)) {
-        return;
-      }
+		vscode.workspace.onDidChangeConfiguration(event => {
+			if (!event.affectsConfiguration(configPrefix)) {
+				return;
+			}
 
-      readConfig();
-    })
+			readConfig();
+		})
 	);
 
 	let disposable = vscode.commands.registerCommand('extension.openQueryRunner', () => {
 		const editor = vscode.window.activeTextEditor;
 
-		if(!editor) {
+		if (!editor) {
 			return;
 		}
 
 		const panel = vscode.window.createWebviewPanel(
 			'queryRunner', // Identifies the type of the webview. Used internally
-			'Query Runner', // Title of the panel displayed to the user
+			'QueryRunner', // Title of the panel displayed to the user
 			vscode.ViewColumn.Beside, // Editor column to show the new webview panel in.
 			{
 				enableScripts: true,
@@ -62,11 +62,11 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 function readConfig(): void {
-  try {
+	try {
 		config = vscode.workspace.getConfiguration(configPrefix);
-  } catch (e) {
-    vscode.window.showErrorMessage(`failed to read config: ${e}`);
-  }
+	} catch (e) {
+		vscode.window.showErrorMessage(`failed to read config: ${e}`);
+	}
 }
 
 function getWebviewContent(context: vscode.ExtensionContext): string {
@@ -89,4 +89,4 @@ function getWebviewContent(context: vscode.ExtensionContext): string {
 // }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

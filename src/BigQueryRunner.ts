@@ -75,15 +75,12 @@ export class BigQueryRunner {
       return;
     }
 
-    const a = result;
-
     try {
       return await this.processResults(job, result[0]);
     } catch (err) {
       vscode.window.showErrorMessage(`Failed to get results: ${err}`);
     }
   }
-
 
   private makeTable (rows: Array<any>): TableResult {
     const headers: string[] = [];
@@ -118,14 +115,20 @@ export class BigQueryRunner {
       );
     });
 
+    const metadata = (await job.getMetadata())[0];
+
     return {
       info: {
-        jobId: job.metadata.id,
+        projectId: metadata.jobReference.projectId,
+        jobId: metadata.id,
         location: job.location,
-        jobLink: job.metadata.selfLink,
-        creationTime: job.metadata.statistics ? new Date(parseInt(job.metadata.statistics.creationTime)): null,
-        startTime: job.metadata.statistics ? new Date(parseInt(job.metadata.statistics.startTime)) : null,
-        userEmail: job.metadata.user_email
+        jobLink: metadata.selfLink,
+        creationTime: metadata.statistics.creationTime,
+        startTime: metadata.statistics.startTime,
+        endTime: metadata.statistics.endTime,
+        userEmail: metadata.user_email,
+        totalBytesProcessed: metadata.statistics.totalBytesProcessed,
+        status: metadata.status.state,
       },
       table: this.makeTable(rows),
       json: JSON.stringify(rows, null, "  "),
