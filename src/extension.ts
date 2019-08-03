@@ -50,13 +50,14 @@ export function activate(context: vscode.ExtensionContext) {
 			async message => {
 				switch (message.command) {
 					case 'runAsQuery':
-						const queryResult = await bigQueryRunner.runAsQuery();
+						const queryResult = await bigQueryRunner.runAsQuery(message.onlySelected);
 						if (queryResult.status === "error") {
 							panel.webview.postMessage({ command: 'queryError', errorMessage: queryResult.errorMessage });
 						} else {
 							panel.webview.postMessage({ command: 'runAsQuery', result: queryResult });
 						}
 						break;
+
 					case 'cancelQuery':
 						const cancelResult = await bigQueryRunner.cancelQuery();
 						panel.webview.postMessage({ command: 'cancelQuery', result: cancelResult });

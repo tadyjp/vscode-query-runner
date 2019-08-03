@@ -163,21 +163,9 @@ export class BigQueryRunner {
     this.output.appendLine(``);
   }
 
-  public async runAsQuery(): Promise<QueryResult | QueryResultError> {
+  public async runAsQuery(onlySelected?: boolean): Promise<QueryResult | QueryResultError> {
     try {
-      // let queryText = getQueryText(vscode.window.activeTextEditor);
-      const queryText = this.getQueryText();
-      // const queryText = `
-      //   SELECT
-      //     'hello' AS text
-      //     , [1, 2, 3] as arr
-      //     , STRUCT(1 AS a, 'abc' AS b) AS dict
-      //   UNION ALL
-      //   SELECT
-      //     NULL AS text
-      //     , [1] as arr
-      //     , STRUCT(2 AS a, 'zzz' AS b) AS dict
-      // `;
+      const queryText = this.getQueryText(onlySelected);
       return await this.query(queryText);
     } catch (err) {
       vscode.window.showErrorMessage(err);

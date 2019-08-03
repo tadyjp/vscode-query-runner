@@ -34,9 +34,16 @@ const vueApp = new Vue ({
   methods: {
     runAsQuery () {
       this.queryStatus = 'runningAsQuery'
-
       call ({
         command: 'runAsQuery',
+      });
+    },
+
+    runAsQuerySelected () {
+      this.queryStatus = 'runningAsQuerySelected'
+      call ({
+        command: 'runAsQuery',
+        onlySelected: true,
       });
     },
 

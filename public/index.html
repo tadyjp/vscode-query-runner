@@ -16,10 +16,14 @@
     <div id="button-container" class="container">
       <button class="button is-info" v-if="queryStatus === 'none' || queryStatus === 'done' || queryStatus === 'error'"
         @click="runAsQuery">Run</button>
-      <button class="button is-info" disabled v-if="queryStatus === 'runningAsQuery'"
-        @click="runAsQuery">Running...</button>
+      <button class="button is-info" disabled v-if="queryStatus === 'runningAsQuery'">Running...</button>
       <button class="button is-danger" v-if="queryStatus === 'runningAsQuery'" @click="cancelQuery">Cancel</button>
-      <button class="button" @click="runAsQuery">Run Selected</button>
+
+      <button class="button" v-if="queryStatus === 'none' || queryStatus === 'done' || queryStatus === 'error'"
+        @click="runAsQuerySelected">Run Selected</button>
+      <button class="button is-info" disabled v-if="queryStatus === 'runningAsQuerySelected'">Running...</button>
+      <button class="button is-danger" v-if="queryStatus === 'runningAsQuerySelected'" @click="cancelQuery">Cancel</button>
+
       <span v-if="queryStatus === 'done'">（経過時間: {{elapsedTime}} 秒、処理されたバイト数: {{totalBytesProcessed}} MB）</span>
     </div>
     <div v-if="queryStatus === 'error'">
