@@ -13,10 +13,16 @@ import bigquery from "@google-cloud/bigquery/build/src/types";
 // ]);
 
 interface QueryResult {
+  status: "success";
   info: { [s: string]: any };
   table: TableResult;
   json: string;
   detail: object;
+}
+
+interface QueryResultError {
+  status: "error";
+  errorMessage: string;
 }
 
 interface TableResult {
@@ -28,16 +34,19 @@ export class BigQueryRunner {
   configPrefix = "queryRunner";
   config: vscode.WorkspaceConfiguration;
   output = vscode.window.createOutputChannel("Query Runner");
+  job: Job | null = null;
+  editor: vscode.TextEditor;
 
-  constructor(config: vscode.WorkspaceConfiguration){
+  constructor(config: vscode.WorkspaceConfiguration, editor: vscode.TextEditor){
     this.config = config;
+    this.editor = editor;
   }
 
   /**
    * @param queryText
    * @param isDryRun Defaults to False.
    */
-  private async query(queryText: string, isDryRun?: boolean): Promise<any> {
+  private async query(queryText: string, isDryRun?: boolean): Promise<QueryResult> {
     let client = new BigQuery({
       // keyFilename: config.get("keyFilename"),
       keyFilename: this.config.get("keyFilename"),
@@ -45,15 +54,20 @@ export class BigQueryRunner {
       projectId: this.config.get("projectId"),
     });
 
-    const data = await client.createQueryJob({
-      query: queryText,
-      // location: config.get("location"),
-      // maximumBytesBilled: config.get("maximumBytesBilled"),
-      // useLegacySql: config.get("useLegacySql"),
-      dryRun: !!isDryRun
-    });
-
-    const job = data[0];
+    let data;
+    try {
+      data = await client.createQueryJob({
+        query: queryText,
+        // location: config.get("location"),
+        // maximumBytesBilled: config.get("maximumBytesBilled"),
+        // useLegacySql: config.get("useLegacySql"),
+        dryRun: !!isDryRun
+      });
+    } catch (err) {
+      vscode.window.showErrorMessage(`Failed to query BigQuery: ${err}`);
+      throw err;
+    }
+    this.job = data[0];
 
     // if (isDryRun) {
     //   vscode.window.showInformationMessage(`${jobIdMessage} (dry run)`);
@@ -62,23 +76,24 @@ export class BigQueryRunner {
     //   return null;
     // }
 
-    vscode.window.showInformationMessage(`BigQuery job ID: ${job.metadata.id}`);
+    vscode.window.showInformationMessage(`BigQuery job ID: ${this.job.metadata.id}`);
 
     let result;
 
     try {
-      result = await job.getQueryResults({
+      result = await this.job.getQueryResults({
         autoPaginate: true // TODO
       });
     } catch (err) {
       vscode.window.showErrorMessage(`Failed to query BigQuery: ${err}`);
-      return;
+      throw err;
     }
 
     try {
-      return await this.processResults(job, result[0]);
+      return await this.processResults(result[0]);
     } catch (err) {
       vscode.window.showErrorMessage(`Failed to get results: ${err}`);
+      throw err;
     }
   }
 
@@ -105,9 +120,13 @@ export class BigQueryRunner {
     };
   }
 
-  private async processResults(job: Job, rows: Array<any>): Promise<QueryResult> {
+  private async processResults(rows: Array<any>): Promise<QueryResult> {
+    if(!this.job) {
+      throw new Error('No job was found.');
+    }
+
     this.output.show();
-    this.output.appendLine(`Results for job ${job.id}:`);
+    this.output.appendLine(`Results for job ${this.job.id}:`);
 
     rows.forEach(row => {
       this.output.appendLine(
@@ -115,13 +134,14 @@ export class BigQueryRunner {
       );
     });
 
-    const metadata = (await job.getMetadata())[0];
+    const metadata = (await this.job.getMetadata())[0];
 
     return {
+      status: "success",
       info: {
         projectId: metadata.jobReference.projectId,
         jobId: metadata.id,
-        location: job.location,
+        location: this.job.location,
         jobLink: metadata.selfLink,
         creationTime: metadata.statistics.creationTime,
         startTime: metadata.statistics.startTime,
@@ -143,50 +163,65 @@ export class BigQueryRunner {
     this.output.appendLine(``);
   }
 
-  private getQueryText(
-    editor: vscode.TextEditor | undefined,
-    onlySelected?: boolean
-  ): string {
-    if (!editor) {
+  public async runAsQuery(): Promise<QueryResult | QueryResultError> {
+    try {
+      // let queryText = getQueryText(vscode.window.activeTextEditor);
+      const queryText = this.getQueryText();
+      // const queryText = `
+      //   SELECT
+      //     'hello' AS text
+      //     , [1, 2, 3] as arr
+      //     , STRUCT(1 AS a, 'abc' AS b) AS dict
+      //   UNION ALL
+      //   SELECT
+      //     NULL AS text
+      //     , [1] as arr
+      //     , STRUCT(2 AS a, 'zzz' AS b) AS dict
+      // `;
+      return await this.query(queryText);
+    } catch (err) {
+      vscode.window.showErrorMessage(err);
+      return {
+        status: "error",
+        errorMessage: err.message,
+      };
+    }
+  }
+
+  public async cancelQuery(): Promise<any> {
+    if(!this.job) {
+      vscode.window.showErrorMessage('No job was found.');
+      return;
+    }
+
+    const result = await this.job.cancel();
+    return result;
+  }
+
+  private getQueryText(onlySelected?: boolean): string {
+    if (!this.editor) {
       throw new Error("No active editor window was found");
     }
 
     // Only return the selected text
     if (onlySelected) {
-      let selection = editor.selection;
+      const selection = this.editor.selection;
       if (selection.isEmpty) {
         throw new Error("No text is currently selected");
       }
 
-      return editor.document.getText(selection).trim();
+      return this.editor.document.getText(selection).trim();
     }
 
-    let text = editor.document.getText().trim();
+    const text = this.editor.document.getText().trim();
     if (!text) {
       throw new Error("The editor window is empty");
     }
 
-    return text;
-  }
+    this.output.show();
+    this.output.appendLine(text);
 
-  public async runAsQuery(): Promise<any> {
-    try {
-      // let queryText = getQueryText(vscode.window.activeTextEditor);
-      const queryText = `
-        SELECT
-          'hello' AS text
-          , [1, 2, 3] as arr
-          , STRUCT(1 AS a, 'abc' AS b) AS dict
-        UNION ALL
-        SELECT
-          NULL AS text
-          , [1] as arr
-          , STRUCT(2 AS a, 'zzz' AS b) AS dict
-      `;
-      return await this.query(queryText);
-    } catch (err) {
-      vscode.window.showErrorMessage(err);
-    }
+    return text;
   }
 
   // function runSelectedAsQuery(): void {

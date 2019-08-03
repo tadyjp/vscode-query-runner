@@ -8,11 +8,12 @@ const vueApp = new Vue ({
   el: '#app',
   data: {
     activeTag: 'info',
-    queryIsDone: false,
-    info: {},
+    queryStatus: 'none',
+    info: null,
     table: null,
     json: '',
     detail: 'det',
+    errorMessage: null,
   },
   computed: {
     elapsedTime () {
@@ -32,18 +33,20 @@ const vueApp = new Vue ({
   },
   methods: {
     runAsQuery () {
+      this.queryStatus = 'runningAsQuery'
+
       call ({
         command: 'runAsQuery',
       });
     },
 
     displayResult (result) {
-      this.activeTag = 'table';
-      this.queryIsDone = true,
-      this.info = result.info;
-      this.table = result.table;
-      this.json = result.json;
-      this.detail = result.detail;
+      this.activeTag = 'table'
+      this.queryStatus = 'done'
+      this.info = result.info
+      this.table = result.table
+      this.json = result.json
+      this.detail = result.detail
     },
 
     displayValue (value) {
@@ -53,14 +56,36 @@ const vueApp = new Vue ({
         return value;
       }
     },
+
+    cancelQuery () {
+      this.queryStatus = 'none'
+
+      call ({
+        command: 'cancelQuery',
+      });
+    },
+
+    didCancelQuery () {
+      this.queryStatus = 'none'
+    },
+
+    displayError (errorMessage) {
+      this.queryStatus = 'error'
+      this.errorMessage = errorMessage
+    }
   },
 });
 
 window.addEventListener ('message', event => {
-  const message = event.data;
-
-  switch (message.command) {
+  switch (event.data.command) {
     case 'runAsQuery':
-        vueApp.displayResult (message.result);
+      vueApp.displayResult(event.data.result);
+      break;
+    case 'queryError':
+      vueApp.displayError(event.data.errorMessage);
+      break;
+    case 'cancelQuery':
+      vueApp.didCancelQuery();
+      break;
   }
 });

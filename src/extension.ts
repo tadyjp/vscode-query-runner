@@ -37,20 +37,30 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.ViewColumn.Beside, // Editor column to show the new webview panel in.
 			{
 				enableScripts: true,
+				retainContextWhenHidden: true,
 				localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'public'))]
 			}
 		);
 
 		panel.webview.html = getWebviewContent(context);
 
-		const bigQueryRunner = new BigQueryRunner(config);
+		const bigQueryRunner = new BigQueryRunner(config, editor);
 
 		panel.webview.onDidReceiveMessage(
 			async message => {
 				switch (message.command) {
 					case 'runAsQuery':
-						const result = await bigQueryRunner.runAsQuery();
-						panel.webview.postMessage({ command: 'runAsQuery', result: result });
+						const queryResult = await bigQueryRunner.runAsQuery();
+						if (queryResult.status === "error") {
+							panel.webview.postMessage({ command: 'queryError', errorMessage: queryResult.errorMessage });
+						} else {
+							panel.webview.postMessage({ command: 'runAsQuery', result: queryResult });
+						}
+						break;
+					case 'cancelQuery':
+						const cancelResult = await bigQueryRunner.cancelQuery();
+						panel.webview.postMessage({ command: 'cancelQuery', result: cancelResult });
+						break;
 				}
 			},
 			undefined,
@@ -82,7 +92,7 @@ function getWebviewContent(context: vscode.ExtensionContext): string {
 	);
 	resourceDir = resourceDir.with({ scheme: 'vscode-resource' });
 
-	return html.replace('__RESOURCE_DIR__', resourceDir.toString());
+	return html.replace(new RegExp('__RESOURCE_DIR__', 'g'), resourceDir.toString());
 }
 
 // function publicPath(filePath: string, context: vscode.ExtensionContext): string {
