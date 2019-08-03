@@ -3,24 +3,29 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import {BigQueryRunner} from './bigquery';
 
-let output = vscode.window.createOutputChannel("BigQuery");
+const configPrefix = "queryRunner";
+let config: vscode.WorkspaceConfiguration;
+let output = vscode.window.createOutputChannel("QueryRunner");
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	readConfig();
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "vscode-query-runner" is now active!');
+	context.subscriptions.push(
+    vscode.workspace.onDidChangeConfiguration(event => {
+      if (!event.affectsConfiguration(configPrefix)) {
+        return;
+      }
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
+      readConfig();
+    })
+	);
+
+	let disposable = vscode.commands.registerCommand('extension.openQueryRunner', () => {
 		const editor = vscode.window.activeTextEditor;
-		// Display a message box to the user
 
 		if(!editor) {
 			return;
@@ -37,9 +42,31 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 
 		panel.webview.html = getWebviewContent(context);
+
+		const bigQueryRunner = new BigQueryRunner(config);
+
+		panel.webview.onDidReceiveMessage(
+			async message => {
+				switch (message.command) {
+					case 'runAsQuery':
+						const result = await bigQueryRunner.runAsQuery();
+						panel.webview.postMessage({ command: 'runAsQuery', result: result });
+				}
+			},
+			undefined,
+			context.subscriptions
+		);
 	});
 
 	context.subscriptions.push(disposable);
+}
+
+function readConfig(): void {
+  try {
+		config = vscode.workspace.getConfiguration(configPrefix);
+  } catch (e) {
+    vscode.window.showErrorMessage(`failed to read config: ${e}`);
+  }
 }
 
 function getWebviewContent(context: vscode.ExtensionContext): string {

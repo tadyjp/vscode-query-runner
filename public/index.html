@@ -1,15 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Query Runner</title>
-	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Query Runner</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.5/css/bulma.min.css"
+    integrity="sha256-vK3UTo/8wHbaUn+dTQD0X6dzidqc5l7gczvH+Bnowwk=" crossorigin="anonymous" />
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <style type="text/css">
+    body {
+      background-color: white
+    }
+  </style>
 </head>
+
 <body>
-	<div id="app">
-		{{ message }}
-	</div>
-	<script src="__RESOURCE_DIR__/main.js"></script>
+  <div id="app">
+    <div>
+      <button class="button is-info" @click="runAsQuery">Run</button>
+      <button class="button" @click="runAsQuery">Run Selected</button>
+    </div>
+    <div class="tabs">
+      <ul>
+        <li v-bind:class="{ 'is-active': activeTag === 'info' }"><a @click="activeTag = 'info'">Info</a></li>
+        <li v-bind:class="{ 'is-active': activeTag === 'table' }"><a @click="activeTag = 'table'">Table</a></li>
+        <li v-bind:class="{ 'is-active': activeTag === 'json' }"><a @click="activeTag = 'json'">JSON</a></li>
+        <li v-bind:class="{ 'is-active': activeTag === 'detail' }"><a @click="activeTag = 'detail'">Detail</a></li>
+      </ul>
+    </div>
+    <div v-if="activeTag === 'info'">
+      <div class="table-container">
+        <table class="table is-bordered is-striped is-narrow is-hoverable">
+          <tbody>
+            <tr v-for="(value, key) in info">
+              <th>{{key}}</th>
+              <td>{{value}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div v-if="activeTag === 'table'">
+      <div class="table-container">
+        <table class="table is-bordered is-striped is-narrow is-hoverable" v-if="table">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th v-for="value in table.headers">{{value}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, idx) in table.rows">
+              <th>{{idx + 1}}</th>
+              <td v-for="value in row">{{displayValue(value)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div v-if="activeTag === 'json'">
+      <pre><code>{{ json }}</code></pre>
+    </div>
+    <div v-if="activeTag === 'detail'">
+      {{ detail }}
+    </div>
+  </div>
+  <script src="__RESOURCE_DIR__/main.js"></script>
 </body>
+
 </html>

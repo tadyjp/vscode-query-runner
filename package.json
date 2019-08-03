@@ -10,16 +10,32 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.openQueryRunner"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
+				"command": "extension.openQueryRunner",
+				"title": "QueryRunner: Open QueryRunner"
 			}
-		]
+		],
+		"configuration": {
+      "type": "object",
+      "title": "QueryRunner extension configuration",
+      "properties": {
+        "queryRunner.keyFilename": {
+          "type": "string",
+          "default": "",
+          "description": "Full path to the a .json, .pem, or .p12 key downloaded from the Google Developers Console. NOTE: .pem and .p12 require you to specify the email option as well."
+        },
+        "queryRunner.projectId": {
+          "type": "string",
+          "default": "",
+          "description": "The project ID from the Google Developer's Console, e.g. 'grape-spaceship-123'."
+				}
+			}
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
@@ -40,6 +56,9 @@
 		"vscode-test": "^1.0.2"
 	},
 	"dependencies": {
+		"@google-cloud/bigquery": "^4.1.6",
+		"@types/flat": "0.0.28",
+		"flat": "^4.1.0",
 		"vue": "^2.6.10"
 	}
 }
