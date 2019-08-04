@@ -75,7 +75,7 @@ const vueApp = new Vue ({
       this.sql = result.sql
       this.info = result.info
       this.table = result.table
-      this.json = result.json
+      // this.json = result.json
       this.detail = result.detail
     },
 

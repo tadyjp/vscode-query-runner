@@ -211,7 +211,7 @@ export class BigQueryRunner {
 
     // Replace variables
     for (let [key, value] of Object.entries(variables)) {
-      const re = new RegExp(key);
+      const re = new RegExp(key, 'g');
       text = text.replace(re, value);
     }
 

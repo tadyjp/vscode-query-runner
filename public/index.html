@@ -42,7 +42,6 @@
           <li v-bind:class="{ 'is-active': activeTag === 'sql' }"><a @click="activeTag = 'sql'">SQL</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'info' }"><a @click="activeTag = 'info'">Info</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'table' }"><a @click="activeTag = 'table'">Table</a></li>
-          <li v-bind:class="{ 'is-active': activeTag === 'json' }"><a @click="activeTag = 'json'">JSON</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'detail' }"><a @click="activeTag = 'detail'">Detail</a></li>
         </ul>
       </div>
@@ -83,9 +82,6 @@
           </tbody>
         </table>
       </div>
-    </div>
-    <div v-if="activeTag === 'json'">
-      <pre><code>{{ json }}</code></pre>
     </div>
     <div v-if="activeTag === 'detail'">
       <pre><code>{{ detail }}</code></pre>

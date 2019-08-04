@@ -27,6 +27,11 @@ When Query result has many rows, table view performance is too terible...
 
 ## Release Notes
 
+### 0.0.3
+
+- Fix variables replacement to global.
+- Remove JSON view for performance.
+
 ### 0.0.1
 
 Initial release.
@@ -39,3 +44,6 @@ Initial release.
 - Shortcut keys
 - Query Plan visualization
 - OAuth support
+
+SELECT
+{var}
