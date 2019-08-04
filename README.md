@@ -1,65 +1,41 @@
 # vscode-query-runner README
 
-This is the README for your extension "vscode-query-runner". After writing up a brief description, we recommend including the following sections.
+A Visual Studio Code ("VS Code") extension that can query Google Cloud Platform's BigQuery analytics database from, and return results to, your editor.
+
+This extension is inspired by [vscode-bigquery](https://github.com/google/vscode-bigquery) a lot. Thank you!
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+![ScreenShot](./images/ScreenShot.png)
 
-For example if there is an image subfolder under your extension project workspace:
-
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+- Write SQL in editor and directly query BigQuery.
+- Replace placeholders in SQL to any value like a template engine.
 
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+To query BigQuery dataset, you must have right API previledge of GCP. (e.g. JSON key file)
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
+* `queryRunner.projectId`: The project ID from the Google Developer's Console, e.g. 'grape-spaceship-123'. We will also check the environment variable GCLOUD_PROJECT for your project ID. If your app is running in an environment which supports Application Default Credentials, your project ID will be detected automatically.
+* `queryRunner.keyFilename`: Full path to the a .json, .pem, or .p12 key downloaded from the Google Developers Console. If you provide a path to a JSON file, the projectId option above is not necessary. NOTE: .pem and .p12 require you to specify the email option as well.
+* `queryRunner.location`: The geographic location of all datasets and jobs referenced and created through the client. Default is 'US'.
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+When Query result has many rows, table view performance is too terible...
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
+Initial release.
 
-Initial release of ...
+## TODO
 
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
------------------------------------------------------------------------------------------------------------
-
-## Working with Markdown
-
-**Note:** You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+CMD+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux) or `Cmd+Space` (macOS) to see a list of Markdown snippets
-
-### For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+- Paging support
+- Dry run
+- Table view performance
+- Shortcut keys
+- Query Plan visualization
+- OAuth support

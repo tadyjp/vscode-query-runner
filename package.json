@@ -1,10 +1,15 @@
 {
 	"name": "vscode-query-runner",
 	"displayName": "vscode-query-runner",
-	"description": "",
+	"publisher": "tady",
+	"description": "A Visual Studio Code (\"VS Code\") extension that can query Google Cloud Platform's BigQuery analytics database from, and return results to, your editor.",
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.36.0"
+	},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tadyjp/vscode-query-runner.git"
 	},
 	"categories": [
 		"Other"
