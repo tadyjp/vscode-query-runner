@@ -47,11 +47,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 		panel.webview.html = getWebviewContent(context);
 
+		// Send variables to webview.
+		const variables = context.workspaceState.get("variables", {});
+		panel.webview.postMessage({ command: 'setVariables', variables });
+
 		panel.webview.onDidReceiveMessage(
 			async message => {
 				switch (message.command) {
 					case 'runAsQuery':
-						const queryResult = await bigQueryRunner.runAsQuery(message.onlySelected);
+						const queryResult = await bigQueryRunner.runAsQuery(message.variables, message.onlySelected);
 						if (queryResult.status === "error") {
 							panel.webview.postMessage({ command: 'queryError', errorMessage: queryResult.errorMessage });
 						} else {
@@ -62,6 +66,10 @@ export function activate(context: vscode.ExtensionContext) {
 					case 'cancelQuery':
 						const cancelResult = await bigQueryRunner.cancelQuery();
 						panel.webview.postMessage({ command: 'cancelQuery', result: cancelResult });
+						break;
+
+					case 'saveVariables':
+						context.workspaceState.update("variables", message.variables);
 						break;
 				}
 			},

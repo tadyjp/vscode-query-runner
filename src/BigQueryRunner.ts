@@ -13,6 +13,7 @@ import * as flatten from "flat";
 
 interface QueryResult {
   status: "success";
+  sql?: string;
   info: { [s: string]: any };
   table: TableResult;
   json: string;
@@ -36,7 +37,7 @@ export class BigQueryRunner {
   job: Job | null = null;
   editor: vscode.TextEditor;
 
-  constructor(config: vscode.WorkspaceConfiguration, editor: vscode.TextEditor){
+  constructor(config: vscode.WorkspaceConfiguration, editor: vscode.TextEditor) {
     this.config = config;
     this.editor = editor;
   }
@@ -103,7 +104,7 @@ export class BigQueryRunner {
     }
   }
 
-  private makeTable (rows: Array<any>): TableResult {
+  private makeTable(rows: Array<any>): TableResult {
     const headers: string[] = [];
     Object.keys(flatten(rows[0], { safe: true })).forEach(name => headers.push(name));
 
@@ -127,18 +128,9 @@ export class BigQueryRunner {
   }
 
   private async processResults(rows: Array<any>): Promise<QueryResult> {
-    if(!this.job) {
+    if (!this.job) {
       throw new Error('No job was found.');
     }
-
-    this.output.show();
-    this.output.appendLine(`Results for job ${this.job.id}:`);
-
-    rows.forEach(row => {
-      this.output.appendLine(
-        JSON.stringify(flatten(row, { safe: true }), null, "  ")
-      );
-    });
 
     const metadata = (await this.job.getMetadata())[0];
 
@@ -162,17 +154,19 @@ export class BigQueryRunner {
     };
   }
 
-  private writeDryRunSummary(jobId: string, numBytesProcessed: string) {
-    this.output.show();
-    this.output.appendLine(`Results for job ${jobId} (dry run):`);
-    this.output.appendLine(`Total bytes processed: ${numBytesProcessed}`);
-    this.output.appendLine(``);
-  }
+  // private writeDryRunSummary(jobId: string, numBytesProcessed: string) {
+  //   this.output.show();
+  //   this.output.appendLine(`Results for job ${jobId} (dry run):`);
+  //   this.output.appendLine(`Total bytes processed: ${numBytesProcessed}`);
+  //   this.output.appendLine(``);
+  // }
 
-  public async runAsQuery(onlySelected?: boolean): Promise<QueryResult | QueryResultError> {
+  public async runAsQuery(variables: { [s: string]: any }, onlySelected?: boolean): Promise<QueryResult | QueryResultError> {
     try {
-      const queryText = this.getQueryText(onlySelected);
-      return await this.query(queryText);
+      const queryText = this.getQueryText(variables, onlySelected);
+      let queryResult = await this.query(queryText);
+      queryResult.sql = queryText;
+      return queryResult;
     } catch (err) {
       vscode.window.showErrorMessage(err);
       return {
@@ -183,7 +177,7 @@ export class BigQueryRunner {
   }
 
   public async cancelQuery(): Promise<any> {
-    if(!this.job) {
+    if (!this.job) {
       vscode.window.showErrorMessage('No job was found.');
       return;
     }
@@ -192,10 +186,12 @@ export class BigQueryRunner {
     return result;
   }
 
-  private getQueryText(onlySelected?: boolean): string {
+  private getQueryText(variables: { [s: string]: any }, onlySelected?: boolean): string {
     if (!this.editor) {
       throw new Error("No active editor window was found");
     }
+
+    let text: string;
 
     // Only return the selected text
     if (onlySelected) {
@@ -204,16 +200,20 @@ export class BigQueryRunner {
         throw new Error("No text is currently selected");
       }
 
-      return this.editor.document.getText(selection).trim();
+      text = this.editor.document.getText(selection).trim();
+    } else {
+      text = this.editor.document.getText().trim();
     }
 
-    const text = this.editor.document.getText().trim();
     if (!text) {
       throw new Error("The editor window is empty");
     }
 
-    this.output.show();
-    this.output.appendLine(text);
+    // Replace variables
+    for (let [key, value] of Object.entries(variables)) {
+      const re = new RegExp(key);
+      text = text.replace(re, value);
+    }
 
     return text;
   }

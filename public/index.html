@@ -22,7 +22,8 @@
       <button class="button" v-if="queryStatus === 'none' || queryStatus === 'done' || queryStatus === 'error'"
         @click="runAsQuerySelected">Run Selected</button>
       <button class="button is-info" disabled v-if="queryStatus === 'runningAsQuerySelected'">Running...</button>
-      <button class="button is-danger" v-if="queryStatus === 'runningAsQuerySelected'" @click="cancelQuery">Cancel</button>
+      <button class="button is-danger" v-if="queryStatus === 'runningAsQuerySelected'"
+        @click="cancelQuery">Cancel</button>
 
       <span v-if="queryStatus === 'done'">（経過時間: {{elapsedTime}} 秒、処理されたバイト数: {{totalBytesProcessed}} MB）</span>
     </div>
@@ -33,52 +34,61 @@
         </div>
       </article>
     </div>
-    <div v-if="!!info">
-      <div>
+    <div>
       <div class="tabs">
         <ul>
+          <li v-bind:class="{ 'is-active': activeTag === 'variables' }"><a
+              @click="activeTag = 'variables'">Variables</a></li>
+          <li v-bind:class="{ 'is-active': activeTag === 'sql' }"><a @click="activeTag = 'sql'">SQL</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'info' }"><a @click="activeTag = 'info'">Info</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'table' }"><a @click="activeTag = 'table'">Table</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'json' }"><a @click="activeTag = 'json'">JSON</a></li>
           <li v-bind:class="{ 'is-active': activeTag === 'detail' }"><a @click="activeTag = 'detail'">Detail</a></li>
         </ul>
-      </div></div>
-      <div v-if="activeTag === 'info'">
-        <div class="table-container">
-          <table class="table is-bordered is-striped is-narrow is-hoverable">
-            <tbody>
-              <tr v-for="(value, key) in info">
-                <th>{{key}}</th>
-                <td>{{value}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
       </div>
-      <div v-if="activeTag === 'table'">
-        <div class="table-container">
-          <table class="table is-bordered is-striped is-narrow is-hoverable" v-if="table">
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th v-for="value in table.headers">{{value}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(row, idx) in table.rows">
-                <th>{{idx + 1}}</th>
-                <td v-for="value in row">{{displayValue(value)}}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    </div>
+    <div v-if="activeTag === 'sql'">
+      <pre><code>{{ sql }}</code></pre>
+    </div>
+    <div v-if="activeTag === 'variables'">
+      <textarea class="textarea" v-model="variablesString" rows="10"
+        placeholder='SQL variables in Object format. e.g. {"var": "val"}'></textarea>
+    </div>
+    <div v-if="activeTag === 'info'">
+      <div class="table-container">
+        <table class="table is-bordered is-striped is-narrow is-hoverable">
+          <tbody>
+            <tr v-for="(value, key) in info">
+              <th>{{key}}</th>
+              <td>{{value}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div v-if="activeTag === 'table'">
+      <div class="table-container">
+        <table class="table is-bordered is-striped is-narrow is-hoverable" v-if="table">
+          <thead>
+            <tr>
+              <th>No.</th>
+              <th v-for="value in table.headers">{{value}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, idx) in table.rows">
+              <th>{{idx + 1}}</th>
+              <td v-for="value in row">{{displayValue(value)}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div v-if="activeTag === 'json'">
-        <pre><code>{{ json }}</code></pre>
-      </div>
-      <div v-if="activeTag === 'detail'">
-        <pre><code>{{ detail }}</code></pre>
-      </div>
+    </div>
+    <div v-if="activeTag === 'json'">
+      <pre><code>{{ json }}</code></pre>
+    </div>
+    <div v-if="activeTag === 'detail'">
+      <pre><code>{{ detail }}</code></pre>
     </div>
   </div>
   <script src="__RESOURCE_DIR__/main.js"></script>

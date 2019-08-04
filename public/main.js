@@ -1,4 +1,4 @@
-const vscode = acquireVsCodeApi ();
+const vscode = acquireVsCodeApi();
 
 async function call (param) {
   return await vscode.postMessage (param);
@@ -9,6 +9,8 @@ const vueApp = new Vue ({
   data: {
     activeTag: 'info',
     queryStatus: 'none',
+    sql: null,
+    variablesString: '{}',
     info: null,
     table: null,
     json: '',
@@ -31,11 +33,30 @@ const vueApp = new Vue ({
       return this.info.totalBytesProcessed // TODO
     }
   },
+  watch: {
+    variablesString (val) {
+      if (this._parseVariables()) {
+        call ({
+          command: 'saveVariables',
+          variables: this._parseVariables(),
+        });
+      }
+    }
+  },
   methods: {
+    _parseVariables () {
+      try {
+        return JSON.parse(this.variablesString)
+      } catch {
+        return null
+      }
+    },
+
     runAsQuery () {
       this.queryStatus = 'runningAsQuery'
       call ({
         command: 'runAsQuery',
+        variables: this._parseVariables() || {},
       });
     },
 
@@ -43,6 +64,7 @@ const vueApp = new Vue ({
       this.queryStatus = 'runningAsQuerySelected'
       call ({
         command: 'runAsQuery',
+        variables: this._parseVariables() || {},
         onlySelected: true,
       });
     },
@@ -50,6 +72,7 @@ const vueApp = new Vue ({
     displayResult (result) {
       this.activeTag = 'table'
       this.queryStatus = 'done'
+      this.sql = result.sql
       this.info = result.info
       this.table = result.table
       this.json = result.json
@@ -79,6 +102,10 @@ const vueApp = new Vue ({
     displayError (errorMessage) {
       this.queryStatus = 'error'
       this.errorMessage = errorMessage
+    },
+
+    setVariables (variables) {
+      this.variablesString = JSON.stringify(variables, null, "  ")
     }
   },
 });
@@ -93,6 +120,9 @@ window.addEventListener ('message', event => {
       break;
     case 'cancelQuery':
       vueApp.didCancelQuery();
+      break;
+    case 'setVariables':
+      vueApp.setVariables(event.data.variables);
       break;
   }
 });
