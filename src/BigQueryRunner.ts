@@ -1,7 +1,6 @@
 import * as vscode from "vscode";
 import { BigQuery, Job } from "@google-cloud/bigquery";
 import * as flatten from "flat";
-import bigquery from "@google-cloud/bigquery/build/src/types";
 
 // CommandMap describes a map of extension commands (defined in package.json)
 // and the function they invoke.
@@ -42,16 +41,19 @@ export class BigQueryRunner {
     this.editor = editor;
   }
 
+  setConfig(config: vscode.WorkspaceConfiguration) {
+    this.config = config;
+  }
+
   /**
    * @param queryText
    * @param isDryRun Defaults to False.
    */
   private async query(queryText: string, isDryRun?: boolean): Promise<QueryResult> {
     let client = new BigQuery({
-      // keyFilename: config.get("keyFilename"),
-      keyFilename: this.config.get("keyFilename"),
-      // projectId: config.get("projectId"),
-      projectId: this.config.get("projectId"),
+      projectId: !!this.config.get("projectId") ? this.config.get("projectId") : undefined,
+      keyFilename: !!this.config.get("keyFilename") ? this.config.get("keyFilename") : undefined,
+      location: !!this.config.get("location") ? this.config.get("location") : undefined,
     });
 
     let data;
@@ -68,6 +70,10 @@ export class BigQueryRunner {
       throw err;
     }
     this.job = data[0];
+
+    if (!this.job) {
+      throw new Error("No job was found.");
+    }
 
     // if (isDryRun) {
     //   vscode.window.showInformationMessage(`${jobIdMessage} (dry run)`);

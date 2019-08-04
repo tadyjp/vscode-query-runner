@@ -14,6 +14,13 @@ let output = vscode.window.createOutputChannel("QueryRunner");
 export function activate(context: vscode.ExtensionContext) {
 	readConfig();
 
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const bigQueryRunner = new BigQueryRunner(config, editor);
+
 	context.subscriptions.push(
 		vscode.workspace.onDidChangeConfiguration(event => {
 			if (!event.affectsConfiguration(configPrefix)) {
@@ -21,15 +28,11 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 
 			readConfig();
+			bigQueryRunner.setConfig(config);
 		})
 	);
 
 	let disposable = vscode.commands.registerCommand('extension.openQueryRunner', () => {
-		const editor = vscode.window.activeTextEditor;
-
-		if (!editor) {
-			return;
-		}
 
 		const panel = vscode.window.createWebviewPanel(
 			'queryRunner', // Identifies the type of the webview. Used internally
@@ -43,8 +46,6 @@ export function activate(context: vscode.ExtensionContext) {
 		);
 
 		panel.webview.html = getWebviewContent(context);
-
-		const bigQueryRunner = new BigQueryRunner(config, editor);
 
 		panel.webview.onDidReceiveMessage(
 			async message => {
