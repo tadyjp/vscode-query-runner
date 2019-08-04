@@ -5,3 +5,28 @@ body {
 #button-container {
   padding: 1rem;
 }
+
+
+.table-sticky-container {
+  height: calc(100vh - 109px);
+  overflow: scroll;
+}
+
+.table-sticky-container table {
+  width: 100%;
+}
+
+.table-sticky-container thead tr th {
+  background-color: #ececec;
+  position: sticky;
+  top: 0;
+  border-top-width: 0 !important;
+  z-index: 2;
+}
+
+.table-sticky-container tbody tr th {
+  background-color: #ececec;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}

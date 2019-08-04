@@ -13,7 +13,7 @@
 
 <body>
   <div id="app">
-    <div id="button-container" class="container">
+    <div id="button-container" class="container is-fluid">
       <button class="button is-info" v-if="queryStatus === 'none' || queryStatus === 'done' || queryStatus === 'error'"
         @click="runAsQuery">Run</button>
       <button class="button is-info" disabled v-if="queryStatus === 'runningAsQuery'">Running...</button>
@@ -67,10 +67,10 @@
       </div>
     </div>
     <div v-if="activeTag === 'table'">
-      <div class="table-container">
+      <div class="table-sticky-container">
         <table class="table is-bordered is-striped is-narrow is-hoverable" v-if="table">
           <thead>
-            <tr>
+            <tr class="table-header">
               <th>No.</th>
               <th v-for="value in table.headers">{{value}}</th>
             </tr>
