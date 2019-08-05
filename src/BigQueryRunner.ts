@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { BigQuery, Job } from "@google-cloud/bigquery";
 import * as flatten from "flat";
+import {GoogleAuth} from "./google_auth";
 
 // CommandMap describes a map of extension commands (defined in package.json)
 // and the function they invoke.
@@ -33,17 +34,35 @@ interface TableResult {
 export class BigQueryRunner {
   configPrefix = "queryRunner";
   config: vscode.WorkspaceConfiguration;
+  client: BigQuery;
   output = vscode.window.createOutputChannel("Query Runner");
   job: Job | null = null;
   editor: vscode.TextEditor;
+  googleAuth: GoogleAuth;
 
   constructor(config: vscode.WorkspaceConfiguration, editor: vscode.TextEditor) {
     this.config = config;
     this.editor = editor;
+    this.googleAuth = new GoogleAuth();
+
+    this.client = new BigQuery({
+      projectId: !!this.config.get("projectId") ? this.config.get("projectId") : undefined,
+      // keyFilename: !!this.config.get("keyFilename") ? this.config.get("keyFilename") : undefined,
+      location: !!this.config.get("location") ? this.config.get("location") : undefined,
+    });
   }
 
   setConfig(config: vscode.WorkspaceConfiguration) {
     this.config = config;
+  }
+
+  getAuthorizeUrl () {
+    return this.googleAuth.getAuthorizeUrl();
+  }
+
+  async setRefreshClient (authCode: string) {
+    const refreshClient = await this.googleAuth.setRefreshClient(authCode);
+    this.client.authClient.cachedCredential = refreshClient;
   }
 
   /**
@@ -51,15 +70,9 @@ export class BigQueryRunner {
    * @param isDryRun Defaults to False.
    */
   private async query(queryText: string, isDryRun?: boolean): Promise<QueryResult> {
-    let client = new BigQuery({
-      projectId: !!this.config.get("projectId") ? this.config.get("projectId") : undefined,
-      keyFilename: !!this.config.get("keyFilename") ? this.config.get("keyFilename") : undefined,
-      location: !!this.config.get("location") ? this.config.get("location") : undefined,
-    });
-
     let data;
     try {
-      data = await client.createQueryJob({
+      data = await this.client.createQueryJob({
         query: queryText,
         // location: config.get("location"),
         // maximumBytesBilled: config.get("maximumBytesBilled"),

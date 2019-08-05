@@ -32,7 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	let disposable = vscode.commands.registerCommand('extension.openQueryRunner', () => {
+	let disposable = vscode.commands.registerCommand('extension.openQueryRunner', async () => {
 
 		const panel = vscode.window.createWebviewPanel(
 			'queryRunner', // Identifies the type of the webview. Used internally
@@ -51,9 +51,22 @@ export function activate(context: vscode.ExtensionContext) {
 		const variables = context.workspaceState.get("variables", {});
 		panel.webview.postMessage({ command: 'setVariables', variables });
 
+		// Set authorize URL.
+		const authorizeUrl = bigQueryRunner.getAuthorizeUrl();
+		panel.webview.postMessage({ command: 'setAuthorizeUrl', authorizeUrl });
+
 		panel.webview.onDidReceiveMessage(
 			async message => {
 				switch (message.command) {
+					case 'openExternal':
+							vscode.env.openExternal(message.url);
+						break;
+
+					case 'setAuthCode':
+							const r = await bigQueryRunner.setRefreshClient(message.authCode);
+							panel.webview.postMessage({ command: 'authSuccessed' });
+						break;
+
 					case 'runAsQuery':
 						const queryResult = await bigQueryRunner.runAsQuery(message.variables, message.onlySelected);
 						if (queryResult.status === "error") {

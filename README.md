@@ -44,6 +44,3 @@ Initial release.
 - Shortcut keys
 - Query Plan visualization
 - OAuth support
-
-SELECT
-{var}
