@@ -79,7 +79,7 @@
 	"dependencies": {
 		"@google-cloud/bigquery": "^4.1.6",
 		"@types/flat": "0.0.28",
-		"flat": "^4.1.0",
+		"flat": "^5.0.1",
 		"vue": "^2.6.10"
 	}
 }
